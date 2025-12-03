@@ -5,7 +5,6 @@
  * The component is animated with Framer Motion for a dynamic and engaging user experience.
  */
 
-// Import necessary libraries and components.
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield } from "lucide-react";
@@ -20,6 +19,27 @@ import { usePrivacyPolicy } from "@/hooks/usePrivacyPolicy";
 const PrivacyPolicy = () => {
   const { t, language } = useTranslation();
   const { data: privacyData } = usePrivacyPolicy();
+
+  const getText = (key: string) => {
+    const texts: Record<string, Record<string, string>> = {
+      continueReading: {
+        en: "Continue reading",
+        fr: "Continuer la lecture",
+        ar: "متابعة القراءة"
+      },
+      description: {
+        en: "Your privacy is important to us. We are committed to protecting your personal information and being transparent about how we use it.",
+        fr: "Votre vie privée est importante pour nous. Nous nous engageons à protéger vos informations personnelles et à être transparents sur la façon dont nous les utilisons.",
+        ar: "خصوصيتك مهمة بالنسبة لنا. نحن ملتزمون بحماية معلوماتك الشخصية والشفافية حول كيفية استخدامها."
+      },
+      readMore: {
+        en: "Read Full Policy",
+        fr: "Lire la politique complète",
+        ar: "اقرأ السياسة الكاملة"
+      }
+    };
+    return texts[key]?.[language] || texts[key]?.en || "";
+  };
 
   type Language = 'en' | 'fr' | 'ar';
   type TranslatableField = { fr?: string; ar?: string; en?: string; } | undefined | {};
@@ -43,18 +63,22 @@ const PrivacyPolicy = () => {
   // Fallback sections when no API data
   const fallbackSections = [
     {
+      id: "data-controller",
       title: t("privacy.dataProtection"),
       description: t("privacy.dataProtectionDesc")
     },
     {
+      id: "legal-basis",
       title: t("privacy.encryption"),
       description: t("privacy.encryptionDesc")
     },
     {
+      id: "data-collection",
       title: t("privacy.transparency"),
       description: t("privacy.transparencyDesc")
     },
     {
+      id: "data-security",
       title: t("privacy.compliance"),
       description: t("privacy.complianceDesc")
     }
@@ -62,11 +86,17 @@ const PrivacyPolicy = () => {
 
   // Use API sections if available, otherwise use fallback
   const privacyFeatures = apiSections.length > 0 
-    ? apiSections.map((section) => ({
+    ? apiSections.map((section, index) => ({
+        id: `section-${index}`,
         title: getTranslated(section.titre),
         description: getTranslated(section.paragraphe)
       }))
     : fallbackSections;
+
+  const truncateText = (text: string, maxLength: number = 120) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength).trim() + "...";
+  };
   
   return (
     <section id="privacy" className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-muted/30">
@@ -113,16 +143,25 @@ const PrivacyPolicy = () => {
               className="group"
             >
               {/* Animated card with hover effects. */}
-              <div className="relative p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl h-full">
+              <div className="relative p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl h-full flex flex-col">
                 {/* A subtle gradient overlay that appears on hover. */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300" />
                 
-                <div className="relative z-10">
+                <div className="relative z-10 flex flex-col flex-1">
                   <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                     <Shield className="w-7 h-7 text-primary" />
                   </div>
                   <h3 className="text-lg font-semibold mb-3">{feature.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-4 flex-1">
+                    {truncateText(feature.description)}
+                  </p>
+                  <Link 
+                    to={`/privacy-policy#${feature.id}`}
+                    className="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1"
+                  >
+                    {getText("continueReading")}
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
                 </div>
               </div>
             </motion.div>
@@ -138,11 +177,11 @@ const PrivacyPolicy = () => {
           className="text-center bg-card border border-border rounded-2xl p-8 max-w-3xl mx-auto"
         >
           <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-            {t("privacy.description")}
+            {getText("description")}
           </p>
           <Link to="/privacy-policy">
             <Button variant="cta" size="lg" className="group">
-              {t("privacy.readMore")}
+              {getText("readMore")}
               <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
